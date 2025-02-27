@@ -1,4 +1,4 @@
-  # Zeta_Assignment_1
+# Zeta_Assignment_1
 
 A web application that mimics the user interface and core functionalities of Google Sheets, with a focus on mathematical and data quality functions, data entry, and key UI interactions.
 
