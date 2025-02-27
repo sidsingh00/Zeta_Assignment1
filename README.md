@@ -1,15 +1,15 @@
-# Zeta_Assignment_1
+# Google Sheets Clone
 
-A web application that mimics the user interface and core functionalities of Google Sheets, with a focus on mathematical and data quality functions, data entry, and key UI interactions.
+This project is a web application that mimics the user interface and core functionalities of Google Sheets, with a focus on mathematical and data quality functions, data entry, and key UI interactions.
 
 ## Features
 
 ### Spreadsheet Interface
 - Google Sheets-like UI with toolbar, formula bar, and cell structure
-- Drag functionality for cell content and selections
-- Cell dependencies with formula support
-- Basic cell formatting (bold, italics, alignment)
-- Add, delete, and resize rows and columns
+- Drag functionality for selections
+- Cell dependencies with formula evaluation
+- Support for basic cell formatting (bold, italics, font size, color)
+- Ability to add, delete, and resize rows and columns
 
 ### Mathematical Functions
 - SUM: Calculates the sum of a range of cells
@@ -26,130 +26,103 @@ A web application that mimics the user interface and core functionalities of Goo
 - FIND_AND_REPLACE: Allows users to find and replace specific text within a range of cells
 
 ### Data Entry and Validation
-- Support for various data types (numbers, text, formulas)
+- Support for various data types (numbers, text, dates)
 - Basic data validation for formulas
-
-### Additional Features
-- Save and load spreadsheets
-- Undo/redo functionality
-- Copy and paste cells
-- Resize rows and columns
 
 ## Tech Stack and Data Structures
 
-### Frontend Technologies
+### Tech Stack
 - **React**: For building the user interface
 - **TypeScript**: For type safety and better developer experience
 - **Zustand**: For state management
 - **Immer**: For immutable state updates
 - **Tailwind CSS**: For styling
-- **Lucide React**: For icons
 - **Vite**: For fast development and building
 
 ### Data Structures
 
-#### Core Data Model
-The application uses a structured data model to represent the spreadsheet:
+#### Cell Model
+The core data structure is the `Cell` type, which represents a single cell in the spreadsheet:
 
 ```typescript
-interface SpreadsheetData {
-  rows: number;
-  cols: number;
-  cells: Record<string, Cell>;
-  selectedCell: string | null;
-  selectedRange: string[] | null;
-  copiedCells: Record<string, Cell> | null;
-  undoStack: SpreadsheetState[];
-  redoStack: SpreadsheetState[];
-  columnWidths: Record<number, number>;
-  rowHeights: Record<number, number>;
-}
-
-interface Cell {
-  id: string;
-  value: string;
-  formula: string;
-  computed: string | number | null;
-  format: CellFormat;
-}
+type Cell = {
+  id: string;        // Unique identifier (row:col format)
+  value: CellValue;  // The actual value (string, number, null)
+  formula: string;   // Formula string if the cell contains a formula
+  display: string;   // Formatted display value
+  style: CellStyle;  // Styling information
+};
 ```
 
-#### Cell Addressing
-- Cells are addressed using A1 notation (e.g., A1, B2)
-- Internally, cells are stored in a map with their address as the key
-- This allows for efficient lookup and updates
+#### Sheet Data
+The sheet data is stored as an object map for O(1) access to any cell:
 
-#### Formula Evaluation
-- Formulas are parsed and evaluated using a recursive descent parser
-- Cell references are resolved dynamically
-- Circular references are detected and handled
-- Functions are implemented as higher-order functions
-
-#### Undo/Redo Stack
-- The application maintains undo and redo stacks
-- Each state change is captured and pushed to the undo stack
-- This allows for efficient time-travel debugging
-
-### Performance Optimizations
-
-1. **Virtualized Rendering**: Only visible cells are rendered, improving performance for large spreadsheets
-2. **Memoization**: Components are memoized to prevent unnecessary re-renders
-3. **Efficient State Updates**: Using Immer for immutable state updates without the overhead
-4. **Lazy Evaluation**: Formulas are only recalculated when needed
-
-### Security Considerations
-
-1. **Input Sanitization**: All user inputs are sanitized to prevent XSS attacks
-2. **Safe Formula Evaluation**: Formulas are evaluated in a controlled environment
-3. **Data Validation**: Input validation is performed to ensure data integrity
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository
-```bash
-git clone https://github.com/Sidharth-krowd/Zeta_Assignment_1.git
-cd google-sheets-clone
+```typescript
+type SheetData = {
+  [key: string]: Cell;
+};
 ```
 
-2. Install dependencies
+This allows for efficient cell lookup by ID without having to traverse a 2D array.
+
+#### Selection Model
+The selection model tracks the current selection state:
+
+```typescript
+type Selection = {
+  start: { row: number; col: number };  // Selection start
+  end: { row: number; col: number };    // Selection end
+  active: { row: number; col: number }; // Active cell within selection
+};
+```
+
+### Formula Evaluation
+Formulas are evaluated using a custom parser that:
+1. Identifies function calls and their arguments
+2. Resolves cell references to their values
+3. Evaluates mathematical expressions
+4. Handles ranges (e.g., A1:B5)
+
+### Virtualization
+The grid implements a simple virtualization technique to render only the visible cells, improving performance for large spreadsheets.
+
+### Undo/Redo
+The application maintains a history stack of sheet states to support undo and redo operations.
+
+## Usage
+
+### Basic Usage
+- Click on a cell to select it
+- Double-click to edit a cell
+- Type a value or formula (starting with =)
+- Use the formula bar to edit the current cell
+- Use the toolbar to format cells
+
+### Using Formulas
+- Start with an equals sign (=)
+- Examples:
+  - `=SUM(A1:A5)` - Sum values in range A1 to A5
+  - `=AVERAGE(B1:B10)` - Average values in range B1 to B10
+  - `=MAX(C1:C20)` - Find maximum value in range C1 to C20
+  - `=MIN(D1:D15)` - Find minimum value in range D1 to D15
+  - `=COUNT(E1:E30)` - Count numeric values in range E1 to E30
+  - `=TRIM(A1)` - Remove whitespace from cell A1
+  - `=UPPER(B1)` - Convert cell B1 to uppercase
+  - `=LOWER(C1)` - Convert cell C1 to lowercase
+
+### Data Operations
+- Select a range and use the "Remove Duplicates" button to remove duplicate rows
+- Use "Find & Replace" to search and replace text in the selected range
+
+## Development
+
+### Running the Project
 ```bash
 npm install
-```
-
-3. Start the development server
-```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
-
 ### Building for Production
-
 ```bash
 npm run build
 ```
-
-### Running Tests
-
-```bash
-npm run test
-```
-
-## Future Enhancements
-
-- Add support for charts and graphs
-- Implement collaborative editing
-- Add more advanced formulas and functions
-- Improve accessibility
-- Add keyboard shortcuts
-- Implement cell validation rules
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
